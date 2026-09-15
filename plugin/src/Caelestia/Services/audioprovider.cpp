@@ -1,9 +1,16 @@
 #include "audioprovider.hpp"
 
+#include <qloggingcategory.h>
+#include <qthread.h>
+
 #include "audiocollector.hpp"
 #include "service.hpp"
-#include <qdebug.h>
-#include <qthread.h>
+
+namespace {
+
+Q_LOGGING_CATEGORY(lcAp, "caelestia.services.ap", QtInfoMsg)
+
+} // namespace
 
 namespace caelestia::services {
 
@@ -16,7 +23,7 @@ AudioProcessor::~AudioProcessor() {
 
 void AudioProcessor::init() {
     m_timer = new QTimer(this);
-    m_timer->setInterval(static_cast<int>(ac::CHUNK_SIZE * 1000.0 / ac::SAMPLE_RATE));
+    m_timer->setInterval(static_cast<int>(ac::k_chunkSize * 1000.0 / ac::k_sampleRate));
     connect(m_timer, &QTimer::timeout, this, &AudioProcessor::process);
 }
 
@@ -48,7 +55,7 @@ AudioProvider::~AudioProvider() {
 
 void AudioProvider::init() {
     if (!m_processor) {
-        qWarning() << "AudioProvider::init: attempted to init with no processor set";
+        qCWarning(lcAp) << "init: attempted to init with no processor set";
         return;
     }
 

@@ -1,10 +1,11 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
+import Caelestia.Config
+import Caelestia.I18n
 import qs.components
 import qs.services
 import qs.utils
-import qs.config
-import QtQuick
 
 Item {
     id: root
@@ -13,8 +14,21 @@ Item {
     required property Brightness.Monitor monitor
     property color colour: Colours.palette.m3primary
 
+    readonly property string windowTitle: {
+        const title = Hypr.activeToplevel?.title;
+        if (!title)
+            return Tr.trCtx("Desktop", "shown when no window is focused");
+        if (Config.bar.activeWindow.compact) {
+            // " - " (standard hyphen), " — " (em dash), " – " (en dash)
+            const parts = title.split(/\s+[\-\u2013\u2014]\s+/);
+            if (parts.length > 1)
+                return parts[parts.length - 1].trim();
+        }
+        return title;
+    }
+
     readonly property int maxHeight: {
-        const otherModules = bar.children.filter(c => c.id && c.item !== this && c.id !== "spacer");
+        const otherModules = bar.children.filter(c => c.entryId && c.item !== this && c.entryId !== "spacer");
         const otherHeight = otherModules.reduce((acc, curr) => acc + (curr.item.nonAnimHeight ?? curr.height), 0);
         // Length - 2 cause repeater counts as a child
         return bar.height - otherHeight - bar.spacing * (bar.children.length - 1) - bar.vPadding * 2;
@@ -24,6 +38,32 @@ Item {
     clip: true
     implicitWidth: Math.max(icon.implicitWidth, current.implicitHeight)
     implicitHeight: icon.implicitHeight + current.implicitWidth + current.anchors.topMargin
+
+    Loader {
+        asynchronous: true
+        anchors.fill: parent
+        active: !Config.bar.activeWindow.showOnHover
+
+        sourceComponent: MouseArea {
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            onPositionChanged: {
+                const popouts = root.bar.popouts;
+                if (popouts.hasCurrent && popouts.currentName !== "activewindow")
+                    popouts.hasCurrent = false;
+            }
+            onClicked: {
+                const popouts = root.bar.popouts;
+                if (popouts.hasCurrent) {
+                    popouts.hasCurrent = false;
+                } else {
+                    popouts.currentName = "activewindow";
+                    popouts.currentCenter = root.mapToItem(root.bar, 0, root.implicitHeight / 2).y;
+                    popouts.hasCurrent = true;
+                }
+            }
+        }
+    }
 
     MaterialIcon {
         id: icon
@@ -46,9 +86,8 @@ Item {
     TextMetrics {
         id: metrics
 
-        text: Hypr.activeToplevel?.title ?? qsTr("Desktop")
-        font.pointSize: Appearance.font.size.smaller
-        font.family: Appearance.font.family.mono
+        text: root.windowTitle
+        font: root.Tokens.font.body.builders.small.letterSpacing(1.4).build()
         elide: Qt.ElideRight
         elideWidth: root.maxHeight - icon.height
 
@@ -61,10 +100,7 @@ Item {
     }
 
     Behavior on implicitHeight {
-        Anim {
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
-        }
+        Anim {}
     }
 
     component Title: StyledText {
@@ -72,19 +108,19 @@ Item {
 
         anchors.horizontalCenter: icon.horizontalCenter
         anchors.top: icon.bottom
-        anchors.topMargin: Appearance.spacing.small
+        anchors.topMargin: Tokens.spacing.small
 
-        font.pointSize: metrics.font.pointSize
-        font.family: metrics.font.family
+        font: metrics.font
         color: root.colour
         opacity: root.current === this ? 1 : 0
+        horizontalAlignment: Text.AlignLeft
 
         transform: [
             Translate {
-                x: Config.bar.activeWindow.inverted ? -implicitWidth + text.implicitHeight : 0
+                x: root.Config.bar.activeWindow.inverted ? -text.implicitWidth + text.implicitHeight : 0
             },
             Rotation {
-                angle: Config.bar.activeWindow.inverted ? 270 : 90
+                angle: root.Config.bar.activeWindow.inverted ? 270 : 90
                 origin.x: text.implicitHeight / 2
                 origin.y: text.implicitHeight / 2
             }
@@ -94,7 +130,9 @@ Item {
         height: implicitWidth
 
         Behavior on opacity {
-            Anim {}
+            Anim {
+                type: Anim.DefaultEffects
+            }
         }
     }
 }

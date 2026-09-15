@@ -1,19 +1,23 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
+import Quickshell
+import Caelestia.Config
 import qs.components
 import qs.services
-import qs.config
-import Quickshell
-import QtQuick
 
 Item {
     id: root
 
     required property ShellScreen screen
-    required property var visibilities
+    required property ScreenState screenState
+    required property bool sidebarOrSessionVisible
+
     property bool hovered
     readonly property Brightness.Monitor monitor: Brightness.getMonitorForScreen(root.screen)
-    readonly property bool shouldBeActive: visibilities.osd && Config.osd.enabled && !(visibilities.utilities && Config.utilities.enabled)
+    readonly property bool shouldBeActive: screenState.osd && Config.osd.enabled && !(screenState.utilities && Config.utilities.enabled)
+    property real offsetScale: shouldBeActive ? 0 : 1
+    property real sidebarOffset: sidebarOrSessionVisible ? 12 : 0
 
     property real volume
     property bool muted
@@ -22,7 +26,7 @@ Item {
     property real brightness
 
     function show(): void {
-        visibilities.osd = true;
+        screenState.osd = true;
         timer.restart();
     }
 
@@ -34,45 +38,17 @@ Item {
         brightness = root.monitor?.brightness ?? 0;
     }
 
-    visible: width > 0
-    implicitWidth: 0
+    visible: offsetScale < 1
+    anchors.rightMargin: (-implicitWidth - 5 - sidebarOffset) * offsetScale
+    implicitWidth: content.implicitWidth
     implicitHeight: content.implicitHeight
+    opacity: 1 - offsetScale
 
-    states: State {
-        name: "visible"
-        when: root.shouldBeActive
-
-        PropertyChanges {
-            root.implicitWidth: content.implicitWidth
-        }
+    Behavior on offsetScale {
+        Anim {}
     }
 
-    transitions: [
-        Transition {
-            from: ""
-            to: "visible"
-
-            Anim {
-                target: root
-                property: "implicitWidth"
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
-            }
-        },
-        Transition {
-            from: "visible"
-            to: ""
-
-            Anim {
-                target: root
-                property: "implicitWidth"
-                easing.bezierCurve: Appearance.anim.curves.emphasized
-            }
-        }
-    ]
-
     Connections {
-        target: Audio
-
         function onMutedChanged(): void {
             root.show();
             root.muted = Audio.muted;
@@ -92,24 +68,26 @@ Item {
             root.show();
             root.sourceVolume = Audio.sourceVolume;
         }
+
+        target: Audio
     }
 
     Connections {
-        target: root.monitor
-
         function onBrightnessChanged(): void {
             root.show();
             root.brightness = root.monitor?.brightness ?? 0;
         }
+
+        target: root.monitor
     }
 
     Timer {
         id: timer
 
-        interval: Config.osd.hideDelay
+        interval: root.Config.osd.hideDelay
         onTriggered: {
             if (!root.hovered)
-                root.visibilities.osd = false;
+                root.screenState.osd = false;
         }
     }
 
@@ -119,11 +97,12 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
 
-        Component.onCompleted: active = Qt.binding(() => root.shouldBeActive || root.visible)
+        asynchronous: true
+        active: root.shouldBeActive || root.visible
 
         sourceComponent: Content {
             monitor: root.monitor
-            visibilities: root.visibilities
+            screenState: root.screenState
             volume: root.volume
             muted: root.muted
             sourceVolume: root.sourceVolume

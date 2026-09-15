@@ -1,38 +1,39 @@
 pragma ComponentBehavior: Bound
 
-import qs.services
-import qs.config
 import "popouts" as BarPopouts
 import "components"
 import "components/workspaces"
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Caelestia.Config
+import qs.components
+import qs.services
 
 ColumnLayout {
     id: root
 
     required property ShellScreen screen
-    required property PersistentProperties visibilities
+    required property ScreenState screenState
     required property BarPopouts.Wrapper popouts
-    readonly property int vPadding: Appearance.padding.large
+    required property bool fullscreen
+    readonly property int vPadding: Tokens.padding.large
 
     function closeTray(): void {
         if (!Config.bar.tray.compact)
             return;
 
         for (let i = 0; i < repeater.count; i++) {
-            const item = repeater.itemAt(i);
-            if (item?.enabled && item.id === "tray") {
-                item.item.expanded = false;
-            }
+            const tray = (repeater.itemAt(i) as EntryWrapper)?.item as Tray;
+            if (tray)
+                tray.expanded = false;
         }
     }
 
     function checkPopout(y: real): void {
-        const ch = childAt(width / 2, y) as WrappedLoader;
+        const ch = childAt(width / 2, y) as EntryWrapper;
 
-        if (ch?.id !== "tray")
+        if (ch?.entryId !== "tray")
             closeTray();
 
         if (!ch) {
@@ -40,13 +41,11 @@ ColumnLayout {
             return;
         }
 
-        const id = ch.id;
+        const id = ch.entryId;
         const top = ch.y;
-        const item = ch.item;
-        const itemHeight = item.implicitHeight;
 
         if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
-            const items = item.items;
+            const items = (ch.item as StatusIcons).items;
             const icon = items.childAt(items.width / 2, mapToItem(items, 0, y).y);
             if (icon) {
                 popouts.currentName = icon.name;
@@ -54,9 +53,10 @@ ColumnLayout {
                 popouts.hasCurrent = true;
             }
         } else if (id === "tray" && Config.bar.popouts.tray) {
-            if (!Config.bar.tray.compact || (item.expanded && !item.expandIcon.contains(mapToItem(item.expandIcon, item.implicitWidth / 2, y)))) {
-                const index = Math.floor(((y - top - item.padding * 2 + item.spacing) / item.layout.implicitHeight) * item.items.count);
-                const trayItem = item.items.itemAt(index);
+            const tray = ch.item as Tray;
+            if (!Config.bar.tray.compact || (tray.expanded && !tray.expandIcon.contains(mapToItem(tray.expandIcon, tray.implicitWidth / 2, y)))) {
+                const index = Math.floor(((y - top - tray.padding * 2 + tray.spacing) / tray.layout.implicitHeight) * tray.items.count);
+                const trayItem = tray.items.itemAt(index);
                 if (trayItem) {
                     popouts.currentName = `traymenu${index}`;
                     popouts.currentCenter = Qt.binding(() => trayItem.mapToItem(root, 0, trayItem.implicitHeight / 2).y);
@@ -66,25 +66,25 @@ ColumnLayout {
                 }
             } else {
                 popouts.hasCurrent = false;
-                item.expanded = true;
+                tray.expanded = true;
             }
-        } else if (id === "activeWindow" && Config.bar.popouts.activeWindow) {
+        } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             popouts.currentName = id.toLowerCase();
-            popouts.currentCenter = item.mapToItem(root, 0, itemHeight / 2).y;
+            popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
             popouts.hasCurrent = true;
         }
     }
 
     function handleWheel(y: real, angleDelta: point): void {
-        const ch = childAt(width / 2, y) as WrappedLoader;
-        if (ch?.id === "workspaces" && Config.bar.scrollActions.workspaces) {
+        const ch = childAt(width / 2, y) as EntryWrapper;
+        if (ch?.entryId === "workspaces" && Config.bar.scrollActions.workspaces) {
             // Workspace scroll
-            const mon = (Config.bar.workspaces.perMonitorWorkspaces ? Hypr.monitorFor(screen) : Hypr.focusedMonitor);
+            const mon = Hypr.monitorFor(screen);
             const specialWs = mon?.lastIpcObject.specialWorkspace.name;
             if (specialWs?.length > 0)
-                Hypr.dispatch(`togglespecialworkspace ${specialWs.slice(8)}`);
-            else if (angleDelta.y < 0 || (Config.bar.workspaces.perMonitorWorkspaces ? mon.activeWorkspace?.id : Hypr.activeWsId) > 1)
-                Hypr.dispatch(`workspace r${angleDelta.y > 0 ? "-" : "+"}1`);
+                Hypr.dispatch(Hypr.usingLua ? `hl.dsp.workspace.toggle_special("${specialWs.slice(8)}")` : `togglespecialworkspace ${specialWs.slice(8)}`);
+            else if (angleDelta.y < 0 || mon.activeWorkspace?.id > 1)
+                Hypr.dispatch(Hypr.usingLua ? `hl.dsp.focus({ workspace = "r${angleDelta.y > 0 ? "-" : "+"}1" })` : `workspace r${angleDelta.y > 0 ? "-" : "+"}1`);
         } else if (y < screen.height / 2 && Config.bar.scrollActions.volume) {
             // Volume scroll on top half
             if (angleDelta.y > 0)
@@ -95,46 +95,53 @@ ColumnLayout {
             // Brightness scroll on bottom half
             const monitor = Brightness.getMonitorForScreen(screen);
             if (angleDelta.y > 0)
-                monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
+                monitor.setBrightness(monitor.brightness + GlobalConfig.services.brightnessIncrement);
             else if (angleDelta.y < 0)
-                monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
+                monitor.setBrightness(monitor.brightness - GlobalConfig.services.brightnessIncrement);
         }
     }
 
-    spacing: Appearance.spacing.normal
+    spacing: Tokens.spacing.medium
 
     Repeater {
         id: repeater
 
-        model: Config.bar.entries
+        model: ScriptModel {
+            values: root.Config.bar.entries.values.filter(e => e.enabled)
+        }
 
         DelegateChooser {
             role: "id"
 
             DelegateChoice {
                 roleValue: "spacer"
-                delegate: WrappedLoader {
-                    Layout.fillHeight: enabled
+                delegate: EntryWrapper {
+                    Layout.fillHeight: true
                 }
             }
             DelegateChoice {
                 roleValue: "logo"
-                delegate: WrappedLoader {
-                    sourceComponent: OsIcon {}
+                delegate: EntryWrapper {
+                    OsIcon {
+                        objectName: "taskbarLogo"
+                    }
                 }
             }
             DelegateChoice {
                 roleValue: "workspaces"
-                delegate: WrappedLoader {
-                    sourceComponent: Workspaces {
+                delegate: EntryWrapper {
+                    Workspaces {
+                        objectName: "taskbarWorkspaces"
                         screen: root.screen
+                        fullscreen: root.fullscreen
                     }
                 }
             }
             DelegateChoice {
                 roleValue: "activeWindow"
-                delegate: WrappedLoader {
-                    sourceComponent: ActiveWindow {
+                delegate: EntryWrapper {
+                    ActiveWindow {
+                        objectName: "taskbarActiveWindow"
                         bar: root
                         monitor: Brightness.getMonitorForScreen(root.screen)
                     }
@@ -142,64 +149,53 @@ ColumnLayout {
             }
             DelegateChoice {
                 roleValue: "tray"
-                delegate: WrappedLoader {
-                    sourceComponent: Tray {}
+                delegate: EntryWrapper {
+                    Tray {
+                        objectName: "taskbarTray"
+                    }
                 }
             }
             DelegateChoice {
                 roleValue: "clock"
-                delegate: WrappedLoader {
-                    sourceComponent: Clock {}
+                delegate: EntryWrapper {
+                    Clock {
+                        objectName: "taskbarClock"
+                    }
                 }
             }
             DelegateChoice {
                 roleValue: "statusIcons"
-                delegate: WrappedLoader {
-                    sourceComponent: StatusIcons {}
+                delegate: EntryWrapper {
+                    StatusIcons {
+                        objectName: "taskbarStatusIcons"
+                    }
                 }
             }
             DelegateChoice {
                 roleValue: "power"
-                delegate: WrappedLoader {
-                    sourceComponent: Power {
-                        visibilities: root.visibilities
+                delegate: EntryWrapper {
+                    Power {
+                        objectName: "taskbarPowerButton"
+                        screenState: root.screenState
                     }
                 }
             }
         }
     }
 
-    component WrappedLoader: Loader {
-        required property bool enabled
-        required property string id
+    component EntryWrapper: Item {
+        required property var modelData
         required property int index
+        default property Item item
+        readonly property string entryId: modelData.id
 
-        function findFirstEnabled(): Item {
-            const count = repeater.count;
-            for (let i = 0; i < count; i++) {
-                const item = repeater.itemAt(i);
-                if (item?.enabled)
-                    return item;
-            }
-            return null;
-        }
-
-        function findLastEnabled(): Item {
-            for (let i = repeater.count - 1; i >= 0; i--) {
-                const item = repeater.itemAt(i);
-                if (item?.enabled)
-                    return item;
-            }
-            return null;
-        }
-
+        Layout.topMargin: index === 0 ? root.vPadding : 0
+        Layout.bottomMargin: index === repeater.count - 1 ? root.vPadding : 0
         Layout.alignment: Qt.AlignHCenter
 
-        // Cursed ahh thing to add padding to first and last enabled components
-        Layout.topMargin: findFirstEnabled() === this ? root.vPadding : 0
-        Layout.bottomMargin: findLastEnabled() === this ? root.vPadding : 0
+        implicitWidth: item?.implicitWidth ?? 0
+        implicitHeight: item?.implicitHeight ?? 0
 
-        visible: enabled
-        active: enabled
+        children: item
     }
 }

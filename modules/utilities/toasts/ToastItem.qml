@@ -1,10 +1,11 @@
+import QtQuick
+import QtQuick.Layouts
+import Caelestia
+import Caelestia.Config
+import Caelestia.I18n
 import qs.components
 import qs.components.effects
 import qs.services
-import qs.config
-import Caelestia
-import QtQuick
-import QtQuick.Layouts
 
 StyledRect {
     id: root
@@ -13,9 +14,9 @@ StyledRect {
 
     anchors.left: parent.left
     anchors.right: parent.right
-    implicitHeight: layout.implicitHeight + Appearance.padding.smaller * 2
+    implicitHeight: layout.implicitHeight + Tokens.padding.large
 
-    radius: Appearance.rounding.normal
+    radius: Tokens.rounding.large
     color: {
         if (root.modelData.type === Toast.Success)
             return Colours.palette.m3successContainer;
@@ -50,13 +51,13 @@ StyledRect {
         id: layout
 
         anchors.fill: parent
-        anchors.margins: Appearance.padding.smaller
-        anchors.leftMargin: Appearance.padding.normal
-        anchors.rightMargin: Appearance.padding.normal
-        spacing: Appearance.spacing.normal
+        anchors.margins: Tokens.padding.small
+        anchors.leftMargin: Tokens.padding.medium
+        anchors.rightMargin: Tokens.padding.medium
+        spacing: Tokens.spacing.medium
 
         StyledRect {
-            radius: Appearance.rounding.normal
+            radius: Tokens.rounding.large
             color: {
                 if (root.modelData.type === Toast.Success)
                     return Colours.palette.m3success;
@@ -68,7 +69,7 @@ StyledRect {
             }
 
             implicitWidth: implicitHeight
-            implicitHeight: icon.implicitHeight + Appearance.padding.smaller * 2
+            implicitHeight: icon.implicitHeight + Tokens.padding.large
 
             MaterialIcon {
                 id: icon
@@ -84,7 +85,7 @@ StyledRect {
                         return Colours.palette.m3onError;
                     return Colours.palette.m3onSurfaceVariant;
                 }
-                font.pointSize: Math.round(Appearance.font.size.large * 1.2)
+                fontStyle: Tokens.font.icon.builders.large.scale(1.2).build()
             }
         }
 
@@ -96,7 +97,7 @@ StyledRect {
                 id: title
 
                 Layout.fillWidth: true
-                text: root.modelData.title
+                text: Tr.trMarked(root.modelData.title)
                 color: {
                     if (root.modelData.type === Toast.Success)
                         return Colours.palette.m3onSuccessContainer;
@@ -106,14 +107,14 @@ StyledRect {
                         return Colours.palette.m3onErrorContainer;
                     return Colours.palette.m3onSurface;
                 }
-                font.pointSize: Appearance.font.size.normal
+                font: Tokens.font.title.small
                 elide: Text.ElideRight
             }
 
             StyledText {
                 Layout.fillWidth: true
                 textFormat: Text.StyledText
-                text: root.modelData.message
+                text: Tr.trMarked(root.modelData.message)
                 color: {
                     if (root.modelData.type === Toast.Success)
                         return Colours.palette.m3onSuccessContainer;

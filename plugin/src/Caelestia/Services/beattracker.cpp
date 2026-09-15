@@ -2,14 +2,13 @@
 
 #include "audiocollector.hpp"
 #include "audioprovider.hpp"
-#include <aubio/aubio.h>
 
 namespace caelestia::services {
 
 BeatProcessor::BeatProcessor(QObject* parent)
     : AudioProcessor(parent)
-    , m_tempo(new_aubio_tempo("default", 1024, ac::CHUNK_SIZE, ac::SAMPLE_RATE))
-    , m_in(new_fvec(ac::CHUNK_SIZE))
+    , m_tempo(new_aubio_tempo("default", 1024, ac::k_chunkSize, ac::k_sampleRate))
+    , m_in(new_fvec(ac::k_chunkSize))
     , m_out(new_fvec(2)) {};
 
 BeatProcessor::~BeatProcessor() {
@@ -19,7 +18,9 @@ BeatProcessor::~BeatProcessor() {
     if (m_in) {
         del_fvec(m_in);
     }
-    del_fvec(m_out);
+    if (m_out) {
+        del_fvec(m_out);
+    }
 }
 
 void BeatProcessor::process() {

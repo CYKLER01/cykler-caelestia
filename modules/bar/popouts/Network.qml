@@ -1,41 +1,42 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Caelestia.Config
+import Caelestia.I18n
 import qs.components
 import qs.components.controls
 import qs.services
-import qs.config
 import qs.utils
-import Quickshell
-import QtQuick
-import QtQuick.Layouts
 
 ColumnLayout {
     id: root
 
-    required property Item wrapper
+    required property PopoutState popouts
 
     property string connectingToSsid: ""
     property string view: "wireless" // "wireless" or "ethernet"
     property var passwordNetwork: null
     property bool showPasswordDialog: false
 
-    spacing: Appearance.spacing.small
-    width: Config.bar.sizes.networkWidth
+    spacing: Tokens.spacing.small
+    width: Tokens.sizes.bar.networkWidth
 
     // Wireless section
     StyledText {
         visible: root.view === "wireless"
         Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.padding.normal : 0
-        Layout.rightMargin: Appearance.padding.small
-        text: qsTr("Wireless")
-        font.weight: 500
+        Layout.topMargin: visible ? Tokens.padding.medium : 0
+        Layout.rightMargin: Tokens.padding.extraSmall
+        text: Tr.tr("Wireless")
+        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
     }
 
     Toggle {
         visible: root.view === "wireless"
         Layout.preferredHeight: visible ? implicitHeight : 0
-        label: qsTr("Enabled")
+        label: Tr.trCtx("Enabled", "toggle label")
         checked: Nmcli.wifiEnabled
         toggle.onToggled: Nmcli.enableWifi(checked)
     }
@@ -43,11 +44,11 @@ ColumnLayout {
     StyledText {
         visible: root.view === "wireless"
         Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.spacing.small : 0
-        Layout.rightMargin: Appearance.padding.small
-        text: qsTr("%1 networks available").arg(Nmcli.networks.length)
+        Layout.topMargin: visible ? Tokens.spacing.small : 0
+        Layout.rightMargin: Tokens.padding.extraSmall
+        text: Tr.trN("%n network available", "%n networks available", Nmcli.networks.length) // qmllint disable missing-property
         color: Colours.palette.m3onSurfaceVariant
-        font.pointSize: Appearance.font.size.small
+        font: Tokens.font.body.small
     }
 
     Repeater {
@@ -70,8 +71,8 @@ ColumnLayout {
             visible: root.view === "wireless"
             Layout.preferredHeight: visible ? implicitHeight : 0
             Layout.fillWidth: true
-            Layout.rightMargin: Appearance.padding.small
-            spacing: Appearance.spacing.small
+            Layout.rightMargin: Tokens.padding.extraSmall
+            spacing: Tokens.spacing.small
 
             opacity: 0
             scale: 0.7
@@ -82,7 +83,9 @@ ColumnLayout {
             }
 
             Behavior on opacity {
-                Anim {}
+                Anim {
+                    type: Anim.DefaultEffects
+                }
             }
 
             Behavior on scale {
@@ -97,24 +100,24 @@ ColumnLayout {
             MaterialIcon {
                 visible: networkItem.modelData.isSecure
                 text: "lock"
-                font.pointSize: Appearance.font.size.small
+                fontStyle: Tokens.font.icon.small
             }
 
             StyledText {
-                Layout.leftMargin: Appearance.spacing.small / 2
-                Layout.rightMargin: Appearance.spacing.small / 2
+                Layout.leftMargin: Tokens.spacing.extraSmall
+                Layout.rightMargin: Tokens.spacing.extraSmall
                 Layout.fillWidth: true
                 text: networkItem.modelData.ssid
                 elide: Text.ElideRight
-                font.weight: networkItem.modelData.active ? 500 : 400
+                font: Tokens.font.body.builders.medium.weight(networkItem.modelData.active ? Font.Medium : Font.Normal).build()
                 color: networkItem.modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 
             StyledRect {
                 implicitWidth: implicitHeight
-                implicitHeight: wirelessConnectIcon.implicitHeight + Appearance.padding.small
+                implicitHeight: wirelessConnectIcon.implicitHeight + Tokens.padding.extraSmall
 
-                radius: Appearance.rounding.full
+                radius: Tokens.rounding.full
                 color: Qt.alpha(Colours.palette.m3primary, networkItem.modelData.active ? 1 : 0)
 
                 CircularIndicator {
@@ -126,7 +129,7 @@ ColumnLayout {
                     color: networkItem.modelData.active ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                     disabled: networkItem.loading || !Nmcli.wifiEnabled
 
-                    function onClicked(): void {
+                    onClicked: {
                         if (networkItem.modelData.active) {
                             Nmcli.disconnectFromNetwork();
                         } else {
@@ -135,7 +138,7 @@ ColumnLayout {
                                 // Password is required - show password dialog
                                 root.passwordNetwork = network;
                                 root.showPasswordDialog = true;
-                                root.wrapper.currentName = "wirelesspassword";
+                                root.popouts.currentName = "wirelesspassword";
                             });
 
                             // Clear connecting state if connection succeeds immediately (saved profile)
@@ -155,7 +158,9 @@ ColumnLayout {
                     opacity: networkItem.loading ? 0 : 1
 
                     Behavior on opacity {
-                        Anim {}
+                        Anim {
+                            type: Anim.DefaultEffects
+                        }
                     }
                 }
             }
@@ -165,27 +170,24 @@ ColumnLayout {
     StyledRect {
         visible: root.view === "wireless"
         Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.spacing.small : 0
+        Layout.topMargin: visible ? Tokens.spacing.small : 0
         Layout.fillWidth: true
-        implicitHeight: rescanBtn.implicitHeight + Appearance.padding.small * 2
+        implicitHeight: rescanBtn.implicitHeight + Tokens.padding.small
 
-        radius: Appearance.rounding.full
+        radius: Tokens.rounding.full
         color: Colours.palette.m3primaryContainer
 
         StateLayer {
             color: Colours.palette.m3onPrimaryContainer
             disabled: Nmcli.scanning || !Nmcli.wifiEnabled
-
-            function onClicked(): void {
-                Nmcli.rescanWifi();
-            }
+            onClicked: Nmcli.rescanWifi()
         }
 
         RowLayout {
             id: rescanBtn
 
             anchors.centerIn: parent
-            spacing: Appearance.spacing.small
+            spacing: Tokens.spacing.small
             opacity: Nmcli.scanning ? 0 : 1
 
             MaterialIcon {
@@ -199,20 +201,22 @@ ColumnLayout {
 
             StyledText {
                 Layout.topMargin: -Math.round(scanIcon.fontInfo.pointSize * 0.0575)
-                text: qsTr("Rescan networks")
+                text: Tr.tr("Rescan networks")
                 color: Colours.palette.m3onPrimaryContainer
             }
 
             Behavior on opacity {
-                Anim {}
+                Anim {
+                    type: Anim.DefaultEffects
+                }
             }
         }
 
         CircularIndicator {
             anchors.centerIn: parent
-            strokeWidth: Appearance.padding.small / 2
+            strokeWidth: Tokens.padding.extraSmall / 2
             bgColour: "transparent"
-            implicitSize: parent.implicitHeight - Appearance.padding.smaller * 2
+            implicitSize: parent.implicitHeight - Tokens.padding.large
             running: Nmcli.scanning
         }
     }
@@ -221,20 +225,20 @@ ColumnLayout {
     StyledText {
         visible: root.view === "ethernet"
         Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.padding.normal : 0
-        Layout.rightMargin: Appearance.padding.small
-        text: qsTr("Ethernet")
-        font.weight: 500
+        Layout.topMargin: visible ? Tokens.padding.medium : 0
+        Layout.rightMargin: Tokens.padding.extraSmall
+        text: Tr.tr("Ethernet")
+        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
     }
 
     StyledText {
         visible: root.view === "ethernet"
         Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.spacing.small : 0
-        Layout.rightMargin: Appearance.padding.small
-        text: qsTr("%1 devices available").arg(Nmcli.ethernetDevices.length)
+        Layout.topMargin: visible ? Tokens.spacing.small : 0
+        Layout.rightMargin: Tokens.padding.extraSmall
+        text: Tr.trN("%n device available", "%n devices available", Nmcli.ethernetDevices.length)
         color: Colours.palette.m3onSurfaceVariant
-        font.pointSize: Appearance.font.size.small
+        font: Tokens.font.body.small
     }
 
     Repeater {
@@ -243,7 +247,7 @@ ColumnLayout {
             values: [...Nmcli.ethernetDevices].sort((a, b) => {
                 if (a.connected !== b.connected)
                     return b.connected - a.connected;
-                return (a.interface || "").localeCompare(b.interface || "");
+                return (a.iface || "").localeCompare(b.iface || "");
             }).slice(0, 8)
         }
 
@@ -256,8 +260,8 @@ ColumnLayout {
             visible: root.view === "ethernet"
             Layout.preferredHeight: visible ? implicitHeight : 0
             Layout.fillWidth: true
-            Layout.rightMargin: Appearance.padding.small
-            spacing: Appearance.spacing.small
+            Layout.rightMargin: Tokens.padding.extraSmall
+            spacing: Tokens.spacing.small
 
             opacity: 0
             scale: 0.7
@@ -268,7 +272,9 @@ ColumnLayout {
             }
 
             Behavior on opacity {
-                Anim {}
+                Anim {
+                    type: Anim.DefaultEffects
+                }
             }
 
             Behavior on scale {
@@ -281,20 +287,20 @@ ColumnLayout {
             }
 
             StyledText {
-                Layout.leftMargin: Appearance.spacing.small / 2
-                Layout.rightMargin: Appearance.spacing.small / 2
+                Layout.leftMargin: Tokens.spacing.extraSmall
+                Layout.rightMargin: Tokens.spacing.extraSmall
                 Layout.fillWidth: true
-                text: ethernetItem.modelData.interface || qsTr("Unknown")
+                text: ethernetItem.modelData.iface || Tr.trCtx("Unknown", "unknown network interface")
                 elide: Text.ElideRight
-                font.weight: ethernetItem.modelData.connected ? 500 : 400
+                font: Tokens.font.body.builders.medium.weight(ethernetItem.modelData.connected ? Font.Medium : Font.Normal).build()
                 color: ethernetItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurface
             }
 
             StyledRect {
                 implicitWidth: implicitHeight
-                implicitHeight: connectIcon.implicitHeight + Appearance.padding.small
+                implicitHeight: connectIcon.implicitHeight + Tokens.padding.extraSmall
 
-                radius: Appearance.rounding.full
+                radius: Tokens.rounding.full
                 color: Qt.alpha(Colours.palette.m3primary, ethernetItem.modelData.connected ? 1 : 0)
 
                 CircularIndicator {
@@ -306,11 +312,11 @@ ColumnLayout {
                     color: ethernetItem.modelData.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                     disabled: ethernetItem.loading
 
-                    function onClicked(): void {
+                    onClicked: {
                         if (ethernetItem.modelData.connected && ethernetItem.modelData.connection) {
                             Nmcli.disconnectEthernet(ethernetItem.modelData.connection, () => {});
                         } else {
-                            Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.interface || "", () => {});
+                            Nmcli.connectEthernet(ethernetItem.modelData.connection || "", ethernetItem.modelData.iface || "", () => {});
                         }
                     }
                 }
@@ -326,7 +332,9 @@ ColumnLayout {
                     opacity: ethernetItem.loading ? 0 : 1
 
                     Behavior on opacity {
-                        Anim {}
+                        Anim {
+                            type: Anim.DefaultEffects
+                        }
                     }
                 }
             }
@@ -334,8 +342,6 @@ ColumnLayout {
     }
 
     Connections {
-        target: Nmcli
-
         function onActiveChanged(): void {
             if (Nmcli.active && root.connectingToSsid === Nmcli.active.ssid) {
                 root.connectingToSsid = "";
@@ -343,8 +349,8 @@ ColumnLayout {
                 if (root.showPasswordDialog && root.passwordNetwork && Nmcli.active.ssid === root.passwordNetwork.ssid) {
                     root.showPasswordDialog = false;
                     root.passwordNetwork = null;
-                    if (root.wrapper.currentName === "wirelesspassword") {
-                        root.wrapper.currentName = "network";
+                    if (root.popouts.currentName === "wirelesspassword") {
+                        root.popouts.currentName = "network";
                     }
                 }
             }
@@ -354,17 +360,20 @@ ColumnLayout {
             if (!Nmcli.scanning)
                 scanIcon.rotation = 0;
         }
+
+        target: Nmcli
     }
 
     Connections {
-        target: root.wrapper
         function onCurrentNameChanged(): void {
             // Clear password network when leaving password dialog
-            if (root.wrapper.currentName !== "wirelesspassword" && root.showPasswordDialog) {
+            if (root.popouts.currentName !== "wirelesspassword" && root.showPasswordDialog) {
                 root.showPasswordDialog = false;
                 root.passwordNetwork = null;
             }
         }
+
+        target: root.popouts
     }
 
     component Toggle: RowLayout {
@@ -373,8 +382,8 @@ ColumnLayout {
         property alias toggle: toggle
 
         Layout.fillWidth: true
-        Layout.rightMargin: Appearance.padding.small
-        spacing: Appearance.spacing.normal
+        Layout.rightMargin: Tokens.padding.extraSmall
+        spacing: Tokens.spacing.medium
 
         StyledText {
             Layout.fillWidth: true

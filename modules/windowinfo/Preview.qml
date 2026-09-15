@@ -1,13 +1,14 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
-import qs.services
-import qs.config
-import Quickshell
-import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Hyprland
+import Quickshell.Wayland
+import Caelestia.Config
+import Caelestia.I18n
+import qs.components
+import qs.services
 
 Item {
     id: root
@@ -15,7 +16,7 @@ Item {
     required property ShellScreen screen
     required property HyprlandToplevel client
 
-    Layout.preferredWidth: preview.implicitWidth + Appearance.padding.large * 2
+    Layout.preferredWidth: preview.implicitWidth + Tokens.padding.extraLargeIncreased
     Layout.fillHeight: true
 
     StyledClippingRect {
@@ -24,15 +25,16 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.bottom: label.top
-        anchors.topMargin: Appearance.padding.large
-        anchors.bottomMargin: Appearance.spacing.normal
+        anchors.topMargin: Tokens.padding.large
+        anchors.bottomMargin: Tokens.spacing.medium
 
         implicitWidth: view.implicitWidth
 
         color: Colours.tPalette.m3surfaceContainer
-        radius: Appearance.rounding.small
+        radius: Tokens.rounding.medium
 
         Loader {
+            asynchronous: true
             anchors.centerIn: parent
             active: !root.client
 
@@ -43,22 +45,21 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: "web_asset_off"
                     color: Colours.palette.m3outline
-                    font.pointSize: Appearance.font.size.extraLarge * 3
+                    fontStyle: Tokens.font.icon.builders.extraLarge.scale(3).build()
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("No active client")
+                    text: Tr.tr("No active client")
                     color: Colours.palette.m3outline
-                    font.pointSize: Appearance.font.size.extraLarge
-                    font.weight: 500
+                    font: Tokens.font.body.builders.large.size(28).weight(Font.Medium).build()
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: qsTr("Try switching to a window")
+                    text: Tr.tr("Try switching to a window")
                     color: Colours.palette.m3outline
-                    font.pointSize: Appearance.font.size.large
+                    font: Tokens.font.body.large
                 }
             }
         }
@@ -68,7 +69,7 @@ Item {
 
             anchors.centerIn: parent
 
-            captureSource: root.client?.wayland ?? null
+            captureSource: root.client?.wayland ?? null // qmllint disable unresolved-type
             live: true
 
             constraintSize.width: root.client ? parent.height * Math.min(root.screen.width / root.screen.height, root.client?.lastIpcObject.size[0] / root.client?.lastIpcObject.size[1]) : parent.height
@@ -81,16 +82,17 @@ Item {
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Appearance.padding.large
+        anchors.bottomMargin: Tokens.padding.large
 
         animate: true
         text: {
             const client = root.client;
             if (!client)
-                return qsTr("No active client");
+                return Tr.tr("No active client");
 
             const mon = client.monitor;
-            return qsTr("%1 on monitor %2 at %3, %4").arg(client.title).arg(mon.name).arg(client.lastIpcObject.at[0]).arg(client.lastIpcObject.at[1]);
+            // TRANSLATORS: %1 = window title, %2 = monitor name, %3/%4 = x/y position in pixels
+            return Tr.tr("%1 on monitor %2 at %3, %4").arg(client.title).arg(mon.name).arg(client.lastIpcObject.at[0]).arg(client.lastIpcObject.at[1]);
         }
     }
 }

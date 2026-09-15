@@ -1,23 +1,23 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
-import qs.components.controls
-import qs.components.containers
-import qs.services
-import qs.config
-import qs.utils
-import Caelestia
-import Caelestia.Models
-import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Widgets
+import Caelestia.Config
+import Caelestia.I18n
+import Caelestia.Models
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.services
+import qs.utils
 
 ColumnLayout {
     id: root
 
     required property var props
-    required property var visibilities
+    required property ScreenState screenState
 
     spacing: 0
 
@@ -28,19 +28,19 @@ ColumnLayout {
         onClicked: root.props.recordingListExpanded = !root.props.recordingListExpanded
 
         RowLayout {
-            spacing: Appearance.spacing.smaller
+            spacing: Tokens.spacing.medium
 
             MaterialIcon {
                 Layout.alignment: Qt.AlignVCenter
                 text: "list"
-                font.pointSize: Appearance.font.size.large
+                fontStyle: Tokens.font.icon.large
             }
 
             StyledText {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
-                text: qsTr("Recordings")
-                font.pointSize: Appearance.font.size.normal
+                text: Tr.tr("Recordings")
+                font: Tokens.font.body.medium
             }
 
             IconButton {
@@ -62,8 +62,8 @@ ColumnLayout {
         }
 
         Layout.fillWidth: true
-        Layout.rightMargin: -Appearance.spacing.small
-        implicitHeight: (Appearance.font.size.larger + Appearance.padding.small) * (root.props.recordingListExpanded ? 10 : 3)
+        Layout.rightMargin: -Tokens.spacing.small
+        implicitHeight: (Tokens.font.body.large.pointSize + Tokens.padding.small) * (root.props.recordingListExpanded ? 10 : 3)
         clip: true
 
         StyledScrollBar.vertical: StyledScrollBar {
@@ -78,14 +78,14 @@ ColumnLayout {
 
             anchors.left: list.contentItem.left
             anchors.right: list.contentItem.right
-            anchors.rightMargin: Appearance.spacing.small
-            spacing: Appearance.spacing.small / 2
+            anchors.rightMargin: Tokens.spacing.small
+            spacing: Tokens.spacing.extraSmall
 
             Component.onCompleted: baseName = modelData.baseName
 
             StyledText {
                 Layout.fillWidth: true
-                Layout.rightMargin: Appearance.spacing.small / 2
+                Layout.rightMargin: Tokens.spacing.extraSmall
                 text: {
                     const time = recording.baseName;
                     const matches = time.match(/^recording_(\d{4})(\d{2})(\d{2})_(\d{2})-(\d{2})-(\d{2})/);
@@ -93,7 +93,7 @@ ColumnLayout {
                         return time;
                     const date = new Date(...matches.slice(1));
                     date.setMonth(date.getMonth() - 1); // Woe (months start from 0)
-                    return qsTr("Recording at %1").arg(Qt.formatDateTime(date, Qt.locale()));
+                    return Tr.tr("Recording at %1").arg(Qt.formatDateTime(date, Qt.locale()));
                 }
                 color: Colours.palette.m3onSurfaceVariant
                 elide: Text.ElideRight
@@ -103,9 +103,9 @@ ColumnLayout {
                 icon: "play_arrow"
                 type: IconButton.Text
                 onClicked: {
-                    root.visibilities.utilities = false;
-                    root.visibilities.sidebar = false;
-                    Quickshell.execDetached(["app2unit", "--", ...Config.general.apps.playback, recording.modelData.path]);
+                    root.screenState.utilities = false;
+                    root.screenState.sidebar = false;
+                    Quickshell.execDetached([...GlobalConfig.general.apps.playback, recording.modelData.path]);
                 }
             }
 
@@ -113,9 +113,9 @@ ColumnLayout {
                 icon: "folder"
                 type: IconButton.Text
                 onClicked: {
-                    root.visibilities.utilities = false;
-                    root.visibilities.sidebar = false;
-                    Quickshell.execDetached(["app2unit", "--", ...Config.general.apps.explorer, recording.modelData.path]);
+                    root.screenState.utilities = false;
+                    root.screenState.sidebar = false;
+                    Quickshell.execDetached([...GlobalConfig.general.apps.explorer, recording.modelData.path]);
                 }
             }
 
@@ -130,31 +130,25 @@ ColumnLayout {
 
         add: Transition {
             Anim {
+                type: Anim.DefaultEffects
                 property: "opacity"
                 from: 0
-                to: 1
-            }
-            Anim {
-                property: "scale"
-                from: 0.5
                 to: 1
             }
         }
 
         remove: Transition {
             Anim {
+                type: Anim.DefaultEffects
                 property: "opacity"
                 to: 0
-            }
-            Anim {
-                property: "scale"
-                to: 0.5
             }
         }
 
         displaced: Transition {
             Anim {
-                properties: "opacity,scale"
+                type: Anim.DefaultEffects
+                property: "opacity"
                 to: 1
             }
             Anim {
@@ -163,26 +157,29 @@ ColumnLayout {
         }
 
         Loader {
+            asynchronous: true
             anchors.centerIn: parent
 
             opacity: list.count === 0 ? 1 : 0
             active: opacity > 0
 
             sourceComponent: ColumnLayout {
-                spacing: Appearance.spacing.small
+                spacing: Tokens.spacing.small
 
                 MaterialIcon {
                     Layout.alignment: Qt.AlignHCenter
                     text: "scan_delete"
                     color: Colours.palette.m3outline
-                    font.pointSize: Appearance.font.size.extraLarge
+                    fontStyle: Tokens.font.icon.extraLarge
 
                     opacity: root.props.recordingListExpanded ? 1 : 0
                     scale: root.props.recordingListExpanded ? 1 : 0
                     Layout.preferredHeight: root.props.recordingListExpanded ? implicitHeight : 0
 
                     Behavior on opacity {
-                        Anim {}
+                        Anim {
+                            type: Anim.DefaultEffects
+                        }
                     }
 
                     Behavior on scale {
@@ -195,7 +192,7 @@ ColumnLayout {
                 }
 
                 RowLayout {
-                    spacing: Appearance.spacing.smaller
+                    spacing: Tokens.spacing.medium
 
                     MaterialIcon {
                         Layout.alignment: Qt.AlignHCenter
@@ -207,7 +204,9 @@ ColumnLayout {
                         Layout.preferredWidth: !root.props.recordingListExpanded ? implicitWidth : 0
 
                         Behavior on opacity {
-                            Anim {}
+                            Anim {
+                                type: Anim.DefaultEffects
+                            }
                         }
 
                         Behavior on scale {
@@ -220,22 +219,21 @@ ColumnLayout {
                     }
 
                     StyledText {
-                        text: qsTr("No recordings found")
+                        text: Tr.tr("No recordings found")
                         color: Colours.palette.m3outline
                     }
                 }
             }
 
             Behavior on opacity {
-                Anim {}
+                Anim {
+                    type: Anim.DefaultEffects
+                }
             }
         }
 
         Behavior on implicitHeight {
-            Anim {
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
-            }
+            Anim {}
         }
     }
 }

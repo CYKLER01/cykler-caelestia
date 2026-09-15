@@ -1,9 +1,9 @@
 pragma Singleton
 
-import qs.config
+import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
-import QtQuick
+import Caelestia.Config
 
 Singleton {
     id: root
@@ -79,6 +79,60 @@ Singleton {
             Office: "content_paste"
         })
 
+    // qmlformat off
+    readonly property list<string> networkIcons: [
+        "signal_wifi_0_bar",
+        "network_wifi_1_bar",
+        "network_wifi_2_bar",
+        "network_wifi_3_bar",
+        "network_wifi"
+    ]
+
+    readonly property var bluetoothIconRules: [
+        [["headset", "headphones"], "headphones"],
+        [["audio"], "speaker"],
+        [["phone"], "smartphone"],
+        [["mouse"], "mouse"],
+        [["keyboard"], "keyboard"]
+    ]
+
+    readonly property var notifIconRules: [
+        [["reboot"], "restart_alt"],
+        [["recording"], "screen_record"],
+        [["battery"], "power"],
+        [["screenshot"], "screenshot_monitor"],
+        [["welcome"], "waving_hand"],
+        [["time", "a break"], "schedule"],
+        [["installed"], "download"],
+        [["update"], "update"],
+        [["unable to"], "deployed_code_alert"],
+        [["profile"], "person"],
+        [["file"], "folder_copy"]
+    ]
+    // qmlformat on
+
+    /**
+     * Checks if a name matches an icon config. Icon configs can have the following keys:
+     * - name: The exact name of the icon
+     * - regex: A regex to match against the name (takes priority over name)
+     * - flags: The regex flags (only used if regex is set)
+     * - icon: The icon to use
+     */
+    function matchIconConfig(name: string, iconConfig: var): bool {
+        if (!iconConfig.icon)
+            return false;
+
+        if (iconConfig.regex) {
+            const re = new RegExp(iconConfig.regex, iconConfig.flags ?? "");
+            if (re.test(name))
+                return true;
+        } else if (iconConfig.name === name) {
+            return true;
+        }
+
+        return false;
+    }
+
     function getAppIcon(name: string, fallback: string): string {
         const icon = DesktopEntries.heuristicLookup(name)?.icon;
         if (fallback !== "undefined")
@@ -87,6 +141,10 @@ Singleton {
     }
 
     function getAppCategoryIcon(name: string, fallback: string): string {
+        for (const iconConfig of GlobalConfig.bar.workspaces.windowIcons)
+            if (matchIconConfig(name, iconConfig))
+                return iconConfig.icon;
+
         const categories = DesktopEntries.heuristicLookup(name)?.categories;
 
         if (categories)
@@ -96,77 +154,36 @@ Singleton {
         return fallback;
     }
 
+    /**
+     * Accepts a list of tables containing matching rules (strings) and their corresponding results.
+     * If any of the strings are found in the text, returns the result associated with them. Otherwise returns the fallback.
+     */
+    function matchIcon(text: string, rules: var, fallback: string): string {
+        for (const [needles, result] of rules)
+            if (needles.some(n => text.includes(n)))
+                return result;
+
+        return fallback;
+    }
+
     function getNetworkIcon(strength: int, isSecure = false): string {
-        if (isSecure) {
-            if (strength >= 80)
-                return "network_wifi_locked";
-            if (strength >= 60)
-                return "network_wifi_3_bar_locked";
-            if (strength >= 40)
-                return "network_wifi_2_bar_locked";
-            if (strength >= 20)
-                return "network_wifi_1_bar_locked";
-            return "signal_wifi_0_bar";
-        } else {
-            if (strength >= 80)
-                return "network_wifi";
-            if (strength >= 60)
-                return "network_wifi_3_bar";
-            if (strength >= 40)
-                return "network_wifi_2_bar";
-            if (strength >= 20)
-                return "network_wifi_1_bar";
-            return "signal_wifi_0_bar";
-        }
+        const level = Math.max(0, Math.min(4, Math.floor(strength / 20)));
+        const icon = networkIcons[level];
+
+        return isSecure && level > 0 ? `${icon}_locked` : icon;
     }
 
     function getBluetoothIcon(icon: string): string {
-        if (icon.includes("headset") || icon.includes("headphones"))
-            return "headphones";
-        if (icon.includes("audio"))
-            return "speaker";
-        if (icon.includes("phone"))
-            return "smartphone";
-        if (icon.includes("mouse"))
-            return "mouse";
-        if (icon.includes("keyboard"))
-            return "keyboard";
-        return "bluetooth";
+        return matchIcon(icon, bluetoothIconRules, "bluetooth");
     }
 
     function getWeatherIcon(code: string): string {
-        if (weatherIcons.hasOwnProperty(code))
-            return weatherIcons[code];
-        return "air";
+        return weatherIcons[code] ?? "air";
     }
 
     function getNotifIcon(summary: string, urgency: int): string {
-        summary = summary.toLowerCase();
-        if (summary.includes("reboot"))
-            return "restart_alt";
-        if (summary.includes("recording"))
-            return "screen_record";
-        if (summary.includes("battery"))
-            return "power";
-        if (summary.includes("screenshot"))
-            return "screenshot_monitor";
-        if (summary.includes("welcome"))
-            return "waving_hand";
-        if (summary.includes("time") || summary.includes("a break"))
-            return "schedule";
-        if (summary.includes("installed"))
-            return "download";
-        if (summary.includes("update"))
-            return "update";
-        if (summary.includes("unable to"))
-            return "deployed_code_alert";
-        if (summary.includes("profile"))
-            return "person";
-        if (summary.includes("file"))
-            return "folder_copy";
-        if (urgency === NotificationUrgency.Critical)
-            return "release_alert";
-        return "chat";
+        const fallback = urgency === NotificationUrgency.Critical ? "release_alert" : "chat";
+        return matchIcon(summary.toLowerCase(), notifIconRules, fallback);
     }
 
     function getVolumeIcon(volume: real, isMuted: bool): string {
@@ -180,42 +197,52 @@ Singleton {
     }
 
     function getMicVolumeIcon(volume: real, isMuted: bool): string {
-        if (!isMuted && volume > 0)
-            return "mic";
-        return "mic_off";
+        return !isMuted && volume > 0 ? "mic" : "mic_off";
     }
 
     function getSpecialWsIcon(name: string): string {
         name = name.toLowerCase().slice("special:".length);
 
-        for (const iconConfig of Config.bar.workspaces.specialWorkspaceIcons) {
-            if (iconConfig.name === name) {
+        for (const iconConfig of GlobalConfig.bar.workspaces.specialWorkspaceIcons)
+            if (matchIconConfig(name, iconConfig))
                 return iconConfig.icon;
-            }
-        }
 
-        if (name === "special")
+        switch (name) {
+        case "special":
             return "star";
-        if (name === "communication")
+        case "communication":
             return "forum";
-        if (name === "music")
+        case "music":
             return "music_cast";
-        if (name === "todo")
+        case "todo":
             return "checklist";
-        if (name === "sysmon")
+        case "sysmon":
             return "monitor_heart";
-        return name[0].toUpperCase();
+        default:
+            return name[0].toUpperCase();
+        }
     }
 
     function getTrayIcon(id: string, icon: string): string {
-        for (const sub of Config.bar.tray.iconSubs)
+        for (const sub of GlobalConfig.bar.tray.iconSubs)
             if (sub.id === id)
                 return sub.image ? Qt.resolvedUrl(sub.image) : Quickshell.iconPath(sub.icon);
 
         if (icon.includes("?path=")) {
             const [name, path] = icon.split("?path=");
-            icon = Qt.resolvedUrl(`${path}/${name.slice(name.lastIndexOf("/") + 1)}`);
+            const file = name.slice(name.lastIndexOf("/") + 1);
+            const themed = Quickshell.iconPath(file, true);
+            icon = themed ? themed : Qt.resolvedUrl(`${path}/${file}`);
         }
         return icon;
+    }
+
+    function getBatteryIcon(percentage: real, charging = false): string {
+        if (percentage === 1)
+            return charging ? "battery_charging_full" : "battery_full";
+        let level = Math.floor(percentage * 7);
+        if (charging && (level === 4 || level === 1))
+            level--;
+        return charging ? `battery_charging_${(level + 3) * 10}` : `battery_${level}_bar`;
     }
 }

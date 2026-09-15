@@ -1,15 +1,14 @@
+import QtQuick
+import Caelestia.Config
 import qs.components
 import qs.services
-import qs.config
-import Quickshell
-import QtQuick
 
 Item {
     id: root
 
-    required property PersistentProperties visibilities
+    required property ScreenState screenState
 
-    implicitWidth: icon.implicitHeight + Appearance.padding.small * 2
+    implicitWidth: icon.implicitHeight + Tokens.padding.small
     implicitHeight: icon.implicitHeight
 
     StateLayer {
@@ -17,24 +16,18 @@ Item {
         anchors.fill: undefined
         anchors.centerIn: parent
         implicitWidth: implicitHeight
-        implicitHeight: icon.implicitHeight + Appearance.padding.small * 2
-
-        radius: Appearance.rounding.full
-
-        function onClicked(): void {
-            root.visibilities.session = !root.visibilities.session;
-        }
+        implicitHeight: icon.implicitHeight + Tokens.padding.small
+        radius: Tokens.rounding.full
+        onClicked: root.screenState.session = !root.screenState.session
     }
 
     MaterialIcon {
         id: icon
 
         anchors.centerIn: parent
-        anchors.horizontalCenterOffset: -1
 
         text: "power_settings_new"
         color: Colours.palette.m3error
-        font.bold: true
-        font.pointSize: Appearance.font.size.normal
+        fontStyle: Tokens.font.icon.builders.small.weight(Font.Bold).build()
     }
 }
