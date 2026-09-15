@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Caelestia.I18n
 import qs.components.controls
 import qs.modules.nexus.common
 
@@ -19,28 +20,31 @@ SelectRow {
         const items = [];
 
         if (root.showRestore)
-            items.push(profileComp.createObject(root, { text: qsTr("Restore"), icon: "refresh", val: "restore" }));
+            items.push(profileComp.createObject(root, { text: Tr.tr("Restore"), icon: "refresh", value: "restore" }));
 
         if (root.showUnchanged)
-            items.push(profileComp.createObject(root, { text: qsTr("Unchanged"), icon: "block", val: "" }));
+            items.push(profileComp.createObject(root, { text: Tr.tr("Unchanged"), icon: "block", value: "" }));
 
-        items.push(profileComp.createObject(root, { text: qsTr("Power Saver"), icon: "battery_saver", val: "power-saver" }));
-        items.push(profileComp.createObject(root, { text: qsTr("Balanced"), icon: "balance", val: "balanced" }));
-        items.push(profileComp.createObject(root, { text: qsTr("Performance"), icon: "speed", val: "performance" }));
+        items.push(profileComp.createObject(root, { text: Tr.tr("Power Saver"), icon: "battery_saver", value: "power-saver" }));
+        items.push(profileComp.createObject(root, { text: Tr.tr("Balanced"), icon: "balance", value: "balanced" }));
+        items.push(profileComp.createObject(root, { text: Tr.tr("Performance"), icon: "speed", value: "performance" }));
 
         return items;
     }
 
     menuItems: root.profileItems
-    active: root.profileItems.find(item => item.val === root.value) ?? null
+    active: root.profileItems.find(item => item.value === root.value) ?? null
 
-    onSelected: item => root.profileChanged(item.val)
+    onSelected: item => {
+        if (item)
+            root.profileChanged(item.value);
+    }
 
-    component ValMenuItem: MenuItem {
-        property string val
+    component ProfileMenuItem: MenuItem {
+        text: ""
     }
 
     readonly property Component profileComp: Component {
-        ValMenuItem {}
+        ProfileMenuItem {}
     }
 }

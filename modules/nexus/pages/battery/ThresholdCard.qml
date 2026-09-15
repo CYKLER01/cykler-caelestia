@@ -14,8 +14,10 @@ import qs.modules.nexus.pages.battery
 ConnectedRect {
     id: root
 
-    required property var thresholdData
+    required property var modelData
     required property int index
+
+    readonly property var thresholdData: root.modelData
 
     signal thresholdChanged(var newData)
     signal removeRequested()
@@ -72,18 +74,18 @@ ConnectedRect {
                     if (root.thresholdData.setPowerProfile)
                         actions.push(root.thresholdData.setPowerProfile);
                     if (root.thresholdData.setRefreshRate)
-                        actions.push(root.thresholdData.setRefreshRate === "auto" ? qsTr("lowest Hz") : `${root.thresholdData.setRefreshRate} Hz`);
+                        actions.push(root.thresholdData.setRefreshRate === "auto" ? Tr.tr("lowest Hz") : `${root.thresholdData.setRefreshRate} Hz`);
                     if (root.thresholdData.disableAnimations)
-                        actions.push(root.thresholdData.disableAnimations === "disable" ? qsTr("no animations") : qsTr("animations on"));
+                        actions.push(root.thresholdData.disableAnimations === "disable" ? Tr.tr("no animations") : Tr.tr("animations on"));
                     if (root.thresholdData.disableBlur)
-                        actions.push(root.thresholdData.disableBlur === "disable" ? qsTr("no blur") : qsTr("blur on"));
+                        actions.push(root.thresholdData.disableBlur === "disable" ? Tr.tr("no blur") : Tr.tr("blur on"));
                     if (root.thresholdData.disableRounding)
-                        actions.push(root.thresholdData.disableRounding === "disable" ? qsTr("no rounding") : qsTr("rounding on"));
+                        actions.push(root.thresholdData.disableRounding === "disable" ? Tr.tr("no rounding") : Tr.tr("rounding on"));
                     if (root.thresholdData.disableShadows)
-                        actions.push(root.thresholdData.disableShadows === "disable" ? qsTr("no shadows") : qsTr("shadows on"));
-                    return actions.length > 0 ? actions.join(", ") : qsTr("No actions");
+                        actions.push(root.thresholdData.disableShadows === "disable" ? Tr.tr("no shadows") : Tr.tr("shadows on"));
+                    return actions.length > 0 ? actions.join(", ") : Tr.tr("No actions");
                 }
-                visible: actions.length > 0
+                visible: text !== Tr.tr("No actions")
                 color: Colours.palette.m3outline
                 font: Tokens.font.label.small
                 elide: Text.ElideRight
@@ -152,9 +154,9 @@ ConnectedRect {
             SelectRow {
                 label: Tr.tr("Power profile")
                 menuItems: root.profileItems
-                active: root.profileItems.find(item => item.val === root.thresholdData.setPowerProfile) ?? root.profileItems[0]
+                active: root.profileItems.find(item => item.value === root.thresholdData.setPowerProfile) ?? root.profileItems[0]
                 onSelected: item => root.thresholdChanged(Object.assign({}, root.thresholdData, {
-                    "setPowerProfile": item.val
+                    "setPowerProfile": item.value
                 }))
             }
 
@@ -205,20 +207,20 @@ ConnectedRect {
 
     readonly property list<MenuItem> profileItems: [
         MenuItem {
-            text: Tr.trCtx("Unchanged", "power profile action")
-            property string val: ""
+            text: Tr.tr("Unchanged")
+            value: ""
         },
         MenuItem {
             text: Tr.tr("Power Saver")
-            property string val: "power-saver"
+            value: "power-saver"
         },
         MenuItem {
             text: Tr.tr("Balanced")
-            property string val: "balanced"
+            value: "balanced"
         },
         MenuItem {
             text: Tr.tr("Performance")
-            property string val: "performance"
+            value: "performance"
         }
     ]
 }

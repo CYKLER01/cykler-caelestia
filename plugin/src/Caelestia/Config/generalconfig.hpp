@@ -47,6 +47,62 @@ class GeneralIdle : public settings::ObjectNode {
         }))
 };
 
+// NOTE(fork): Battery power management (ported from feat/low-battery-optimization).
+// The behavior classes intentionally do NOT share a base class: the settings
+// schema only registers properties declared directly on each class, so
+// inherited properties would be unknown keys when written.
+class GeneralChargingBehavior : public settings::ObjectNode {
+    CONFIG_NODE(GeneralChargingBehavior, settings::ObjectNode)
+
+    CONFIG_GLOBAL_PROPERTY(QString, setPowerProfile, u"restore"_s)
+    CONFIG_GLOBAL_PROPERTY(QString, setRefreshRate, u"restore"_s)
+    CONFIG_GLOBAL_PROPERTY(QString, disableAnimations, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableBlur, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableRounding, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableShadows, QString())
+};
+
+class GeneralUnpluggedBehavior : public settings::ObjectNode {
+    CONFIG_NODE(GeneralUnpluggedBehavior, settings::ObjectNode)
+
+    CONFIG_GLOBAL_PROPERTY(QString, setPowerProfile, u"restore"_s)
+    CONFIG_GLOBAL_PROPERTY(QString, setRefreshRate, u"restore"_s)
+    CONFIG_GLOBAL_PROPERTY(QString, disableAnimations, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableBlur, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableRounding, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableShadows, QString())
+    CONFIG_GLOBAL_PROPERTY(bool, evaluateThresholds, true)
+};
+
+class GeneralProfileBehavior : public settings::ObjectNode {
+    CONFIG_NODE(GeneralProfileBehavior, settings::ObjectNode)
+
+    CONFIG_GLOBAL_PROPERTY(QString, setPowerProfile, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, setRefreshRate, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableAnimations, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableBlur, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableRounding, QString())
+    CONFIG_GLOBAL_PROPERTY(QString, disableShadows, QString())
+};
+
+class GeneralProfileBehaviors : public settings::ObjectNode {
+    CONFIG_NODE(GeneralProfileBehaviors, settings::ObjectNode)
+
+    CONFIG_GLOBAL_SUBOBJECT(GeneralProfileBehavior, powerSaver)
+    CONFIG_GLOBAL_SUBOBJECT(GeneralProfileBehavior, balanced)
+    CONFIG_GLOBAL_SUBOBJECT(GeneralProfileBehavior, performance)
+};
+
+class GeneralPowerManagement : public settings::ObjectNode {
+    CONFIG_NODE(GeneralPowerManagement, settings::ObjectNode)
+
+    CONFIG_GLOBAL_PROPERTY(bool, enabled, false)
+    CONFIG_GLOBAL_PROPERTY(QVariantList, thresholds, {})
+    CONFIG_GLOBAL_SUBOBJECT(GeneralChargingBehavior, onCharging)
+    CONFIG_GLOBAL_SUBOBJECT(GeneralUnpluggedBehavior, onUnplugged)
+    CONFIG_GLOBAL_SUBOBJECT(GeneralProfileBehaviors, profileBehaviors)
+};
+
 class GeneralBattery : public settings::ObjectNode {
     CONFIG_NODE(GeneralBattery, settings::ObjectNode)
 
@@ -73,6 +129,8 @@ class GeneralBattery : public settings::ObjectNode {
             }),
         }))
     CONFIG_GLOBAL_PROPERTY(int, criticalLevel, 3)
+
+    CONFIG_GLOBAL_SUBOBJECT(GeneralPowerManagement, powerManagement)
 };
 
 class GeneralConfig : public settings::ObjectNode {

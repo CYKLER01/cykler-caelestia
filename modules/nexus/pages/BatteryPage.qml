@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Caelestia.Config
 import Caelestia.I18n
+import qs.components
 import qs.components.controls
 import qs.services
 import qs.modules.nexus.common
@@ -26,19 +27,19 @@ PageBase {
     readonly property list<MenuItem> profileItems: [
         MenuItem {
             text: Tr.trCtx("Auto", "default power profile")
-            property string val: ""
+            value: ""
         },
         MenuItem {
             text: Tr.tr("Power Saver")
-            property string val: "power-saver"
+            value: "power-saver"
         },
         MenuItem {
             text: Tr.tr("Balanced")
-            property string val: "balanced"
+            value: "balanced"
         },
         MenuItem {
             text: Tr.tr("Performance")
-            property string val: "performance"
+            value: "performance"
         }
     ]
 
@@ -59,7 +60,7 @@ PageBase {
             text: Tr.tr("Enable power management")
             subtext: Tr.tr("Apply power-saving settings automatically")
             checked: GlobalConfig.general.battery.powerManagement.enabled
-            onToggled: checked => GlobalConfig.general.battery.powerManagement.enabled = checked
+            onToggled: GlobalConfig.general.battery.powerManagement.enabled = checked
         }
 
         ToggleRow {
@@ -67,7 +68,7 @@ PageBase {
             text: Tr.tr("Power change notifications")
             subtext: Tr.tr("Notify when power-saving settings are applied")
             checked: GlobalConfig.utilities.toasts.lowPowerModeChanged
-            onToggled: checked => GlobalConfig.utilities.toasts.lowPowerModeChanged = checked
+            onToggled: GlobalConfig.utilities.toasts.lowPowerModeChanged = checked
         }
 
         // Plugged in
@@ -79,8 +80,8 @@ PageBase {
             first: true
             label: Tr.tr("Power profile")
             menuItems: root.profileItems
-            active: root.profileItems.find(item => item.val === GlobalConfig.general.battery.powerManagement.onCharging.setPowerProfile) ?? root.profileItems[0]
-            onSelected: item => GlobalConfig.general.battery.powerManagement.onCharging.setPowerProfile = item.val
+            active: root.profileItems.find(item => item.value === GlobalConfig.general.battery.powerManagement.onCharging.setPowerProfile) ?? root.profileItems[0]
+            onSelected: item => GlobalConfig.general.battery.powerManagement.onCharging.setPowerProfile = item.value
         }
 
         RefreshRateSelector {
@@ -127,8 +128,8 @@ PageBase {
             first: true
             label: Tr.tr("Power profile")
             menuItems: root.profileItems
-            active: root.profileItems.find(item => item.val === GlobalConfig.general.battery.powerManagement.onUnplugged.setPowerProfile) ?? root.profileItems[0]
-            onSelected: item => GlobalConfig.general.battery.powerManagement.onUnplugged.setPowerProfile = item.val
+            active: root.profileItems.find(item => item.value === GlobalConfig.general.battery.powerManagement.onUnplugged.setPowerProfile) ?? root.profileItems[0]
+            onSelected: item => GlobalConfig.general.battery.powerManagement.onUnplugged.setPowerProfile = item.value
         }
 
         RefreshRateSelector {
@@ -170,7 +171,7 @@ PageBase {
             text: Tr.tr("Evaluate battery thresholds")
             subtext: Tr.tr("Also apply the threshold actions below")
             checked: GlobalConfig.general.battery.powerManagement.onUnplugged.evaluateThresholds
-            onToggled: checked => GlobalConfig.general.battery.powerManagement.onUnplugged.evaluateThresholds = checked
+            onToggled: GlobalConfig.general.battery.powerManagement.onUnplugged.evaluateThresholds = checked
         }
 
         // Thresholds
@@ -190,10 +191,6 @@ PageBase {
             model: root.thresholds
 
             ThresholdCard {
-                required property int index
-                required property var modelData
-
-                thresholdData: root.thresholds[index]
                 onThresholdChanged: newData => {
                     const thresholds = [...root.thresholds];
                     thresholds[index] = newData;
@@ -244,14 +241,12 @@ PageBase {
 
             ProfileBehaviorCard {
                 Layout.fillWidth: true
-                Layout.maximumWidth: (parent.width - Tokens.spacing.extraSmall) / 2
                 profileName: Tr.tr("Power Saver")
                 behavior: GlobalConfig.general.battery.powerManagement.profileBehaviors.powerSaver
             }
 
             ProfileBehaviorCard {
                 Layout.fillWidth: true
-                Layout.maximumWidth: (parent.width - Tokens.spacing.extraSmall) / 2
                 profileName: Tr.tr("Balanced")
                 behavior: GlobalConfig.general.battery.powerManagement.profileBehaviors.balanced
             }
@@ -263,14 +258,12 @@ PageBase {
 
             ProfileBehaviorCard {
                 Layout.fillWidth: true
-                Layout.maximumWidth: (parent.width - Tokens.spacing.extraSmall) / 2
                 profileName: Tr.tr("Performance")
                 behavior: GlobalConfig.general.battery.powerManagement.profileBehaviors.performance
             }
 
             Item {
                 Layout.fillWidth: true
-                Layout.maximumWidth: (parent.width - Tokens.spacing.extraSmall) / 2
             }
         }
 

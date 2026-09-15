@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell.Hyprland
+import Caelestia.I18n
 import qs.components.controls
 import qs.modules.nexus.common
 
@@ -16,14 +17,14 @@ SelectRow {
     signal rateChanged(string newValue)
 
     // NOTE(fork): label is set by the caller via the `label` alias
-    readonly property list<ValMenuItem> rateItems: {
+    readonly property list<MenuItem> rateItems: {
         const items = [];
 
         if (root.showRestore)
-            items.push(rateComp.createObject(root, { text: qsTr("Restore"), icon: "refresh", val: "restore" }));
+            items.push(rateComp.createObject(root, { text: Tr.tr("Restore"), icon: "refresh", value: "restore" }));
 
         if (root.showUnchanged)
-            items.push(rateComp.createObject(root, { text: qsTr("Unchanged"), icon: "block", val: "" }));
+            items.push(rateComp.createObject(root, { text: Tr.tr("Unchanged"), icon: "block", value: "" }));
 
         const uniqueRates = new Set();
 
@@ -41,23 +42,26 @@ SelectRow {
 
         const sortedRates = [...uniqueRates].sort((a, b) => a - b);
         for (const rate of sortedRates)
-            items.push(rateComp.createObject(root, { text: `${rate} Hz`, icon: "speed", val: rate.toString() }));
+            items.push(rateComp.createObject(root, { text: `${rate} Hz`, icon: "speed", value: rate.toString() }));
 
-        items.push(rateComp.createObject(root, { text: qsTr("Auto (lowest)"), icon: "battery_saver", val: "auto" }));
+        items.push(rateComp.createObject(root, { text: Tr.tr("Auto (lowest)"), icon: "battery_saver", value: "auto" }));
 
         return items;
     }
 
     menuItems: root.rateItems
-    active: root.rateItems.find(item => item.val === root.value) ?? null
+    active: root.rateItems.find(item => item.value === root.value) ?? null
 
-    onSelected: item => root.rateChanged(item.val)
+    onSelected: item => {
+        if (item)
+            root.rateChanged(item.value);
+    }
 
-    component ValMenuItem: MenuItem {
-        property string val
+    component RateMenuItem: MenuItem {
+        text: ""
     }
 
     readonly property Component rateComp: Component {
-        ValMenuItem {}
+        RateMenuItem {}
     }
 }

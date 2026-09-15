@@ -5,6 +5,7 @@ import Caelestia
 import Caelestia.Config
 import Caelestia.I18n
 import Caelestia.Services
+import qs.services
 
 Scope {
     id: root
@@ -90,7 +91,13 @@ Scope {
 
         for (const monitor of Hypr.monitors.values) {
             const data = monitor.lastIpcObject;
-            if (data)
+            if (!data)
+                continue;
+
+            // NOTE(fork): lua Hyprland removed "keyword monitor"; use hl.monitor() there
+            if (Hypr.usingLua)
+                Hypr.extras.message(`eval hl.monitor({ output = "${data.name}", mode = "${data.width}x${data.height}@${targetRate}", position = "${data.x}x${data.y}", scale = ${data.scale} });`);
+            else
                 Hypr.extras.message(`keyword monitor ${data.name},${data.width}x${data.height}@${targetRate},${data.x}x${data.y},${data.scale}`);
         }
     }
@@ -143,7 +150,11 @@ Scope {
             const data = monitor.lastIpcObject;
             if (data && root.originalSettings.refreshRates[data.name]) {
                 const originalRate = root.originalSettings.refreshRates[data.name];
-                Hypr.extras.message(`keyword monitor ${data.name},${data.width}x${data.height}@${originalRate},${data.x}x${data.y},${data.scale}`);
+
+                if (Hypr.usingLua)
+                    Hypr.extras.message(`eval hl.monitor({ output = "${data.name}", mode = "${data.width}x${data.height}@${originalRate}", position = "${data.x}x${data.y}", scale = ${data.scale} });`);
+                else
+                    Hypr.extras.message(`keyword monitor ${data.name},${data.width}x${data.height}@${originalRate},${data.x}x${data.y},${data.scale}`);
             }
         }
     }
