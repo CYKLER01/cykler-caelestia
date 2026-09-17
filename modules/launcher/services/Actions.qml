@@ -45,6 +45,9 @@ Searcher {
             } else if (command[0] === "setMode" && command.length > 1) {
                 list.screenState.launcher = false;
                 Colours.setMode(command[1]);
+            } else if (command[0] === "ocr") {
+                list.screenState.launcher = false;
+                Quickshell.execDetached(["bash", `${Quickshell.shellDir}/assets/ocr.sh`]);
             } else {
                 list.screenState.launcher = false;
                 if (!SessionManager.exec(command))

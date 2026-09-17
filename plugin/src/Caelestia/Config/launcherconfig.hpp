@@ -61,6 +61,12 @@ class LauncherConfig : public settings::ObjectNode {
                 { u"command"_s, QStringList{ u"autocomplete"_s, u"ssh"_s } },
             }),
             vmap({
+                { u"name"_s, markCtx(u"OCR"_s, u"launcher action"_s) },
+                { u"icon"_s, u"text_fields"_s },
+                { u"description"_s, mark(u"Capture a region and copy detected text"_s) },
+                { u"command"_s, QStringList{ u"ocr"_s } },
+            }),
+            vmap({
                 { u"name"_s, markCtx(u"Wallpaper"_s, u"launcher action"_s) },
                 { u"icon"_s, u"image"_s },
                 { u"description"_s, mark(u"Change the current wallpaper"_s) },
