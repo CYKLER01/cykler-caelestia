@@ -67,6 +67,12 @@ class LauncherConfig : public settings::ObjectNode {
                 { u"command"_s, QStringList{ u"ocr"_s } },
             }),
             vmap({
+                { u"name"_s, markCtx(u"Google Lens"_s, u"launcher action"_s) },
+                { u"icon"_s, u"image_search"_s },
+                { u"description"_s, mark(u"Search a captured region with Google Lens"_s) },
+                { u"command"_s, QStringList{ u"lens"_s } },
+            }),
+            vmap({
                 { u"name"_s, markCtx(u"Wallpaper"_s, u"launcher action"_s) },
                 { u"icon"_s, u"image"_s },
                 { u"description"_s, mark(u"Change the current wallpaper"_s) },

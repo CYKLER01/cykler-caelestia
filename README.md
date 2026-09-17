@@ -35,11 +35,14 @@ This is my take on the Caelestia shell — upstream's desktop shell with my own 
 -   Game mode now also sets `input:accel_profile: flat` in Hyprland, disabling mouse
     acceleration while gaming (and restores it when game mode is turned off)
 
-### Launcher OCR
+### Launcher image tools
 
 -   **OCR action** — select a screen region with `slurp`, recognize it with `tesseract`,
     and copy the detected text to the clipboard with `wl-copy`.
--   Launch it from the command panel by selecting **OCR** or searching for `>ocr`.
+-   **Google Lens action** — select a screen region with `slurp`, upload the capture to
+    Uguu, and open the result in Google Lens.
+-   Launch either tool from the command panel by selecting its action or searching for
+    `>ocr` / `>lens`.
 
 ## Feature requests
 
@@ -90,7 +93,7 @@ Dependencies (same as upstream):
     `power-profiles-daemon`
 -   Fonts: `ttf-material-symbols-variable`, `ttf-rubik-vf`, `ttf-cascadia-code-nerd`
 -   Qt: `qt6-base`, `qt6-declarative`, `qt6-imageformats`, [`qt6-m3shapes-git`](https://github.com/soramanew/m3shapes)
--   `swappy`, `fish`, `bash`, `grim`, `slurp`, `tesseract`, `wl-clipboard`, `libnotify`
+-   `swappy`, `fish`, `bash`, `grim`, `slurp`, `tesseract`, `wl-clipboard`, `libnotify`, `curl`, `jq`, `xdg-utils`
 
 
 Build dependencies: `git`, `cmake`, `ninja`, `qt6-shadertools`

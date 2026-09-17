@@ -45,9 +45,9 @@ Searcher {
             } else if (command[0] === "setMode" && command.length > 1) {
                 list.screenState.launcher = false;
                 Colours.setMode(command[1]);
-            } else if (command[0] === "ocr") {
+            } else if (["ocr", "lens"].includes(command[0])) {
                 list.screenState.launcher = false;
-                Quickshell.execDetached(["bash", `${Quickshell.shellDir}/assets/ocr.sh`]);
+                Quickshell.execDetached(["bash", `${Quickshell.shellDir}/assets/${command[0]}.sh`]);
             } else {
                 list.screenState.launcher = false;
                 if (!SessionManager.exec(command))
