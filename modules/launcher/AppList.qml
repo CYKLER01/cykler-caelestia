@@ -33,6 +33,9 @@ StyledListView {
                 if (text.startsWith(`${prefix}${action} `))
                     return action;
 
+            if (text === `${prefix}ssh` || text.startsWith(`${prefix}ssh `))
+                return "ssh";
+
             return "actions";
         }
 
@@ -49,13 +52,18 @@ StyledListView {
             return Schemes.query(text);
         case "variant":
             return M3Variants.query(text);
+        case "ssh":
+            return SSH.search(text);
         default:
             return Apps.search(text);
         }
     }
 
     model: ScriptModel {
-        values: root.resultsForText(root.displayText)
+        values: {
+            SSH.hostRevision;
+            return root.resultsForText(root.displayText);
+        }
         onValuesChanged: root.currentIndex = 0
     }
 
@@ -87,6 +95,8 @@ StyledListView {
     onStateChanged: {
         if (state === "scheme" || state === "variant")
             Schemes.reload();
+        else if (state === "ssh")
+            SSH.reload();
     }
 
     Component.onCompleted: displayText = search.text
@@ -125,6 +135,13 @@ StyledListView {
 
             PropertyChanges {
                 root.delegate: variantItem
+            }
+        },
+        State {
+            name: "ssh"
+
+            PropertyChanges {
+                root.delegate: sshItem
             }
         }
     ]
@@ -283,6 +300,14 @@ StyledListView {
         id: variantItem
 
         VariantItem {
+            list: root
+        }
+    }
+
+    Component {
+        id: sshItem
+
+        ActionItem {
             list: root
         }
     }
