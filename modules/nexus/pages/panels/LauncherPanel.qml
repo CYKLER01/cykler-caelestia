@@ -109,11 +109,18 @@ PageBase {
         }
 
         ToggleRow {
-            last: true
             text: Tr.tr("Enable dangerous actions")
             subtext: Tr.tr("Allow actions that shut down or log out")
             checked: GlobalConfig.launcher.enableDangerousActions
             onToggled: GlobalConfig.launcher.enableDangerousActions = checked
+        }
+
+        ToggleRow {
+            last: true
+            text: Tr.tr("Enable Supergfxctl")
+            subtext: Tr.tr("Show GPU mode switching for ASUS laptops")
+            checked: GlobalConfig.launcher.enableSupergfxctl
+            onToggled: GlobalConfig.launcher.enableSupergfxctl = checked
         }
 
         // Fuzzy search

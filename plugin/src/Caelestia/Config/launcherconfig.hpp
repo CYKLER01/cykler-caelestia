@@ -35,6 +35,7 @@ class LauncherConfig : public settings::ObjectNode {
     CONFIG_GLOBAL_PROPERTY(QString, specialPrefix, u"@"_s)
     CONFIG_GLOBAL_PROPERTY(QString, actionPrefix, u">"_s)
     CONFIG_GLOBAL_PROPERTY(bool, enableDangerousActions, false)
+    CONFIG_GLOBAL_PROPERTY(bool, enableSupergfxctl, false)
     CONFIG_PROPERTY(int, dragThreshold, 50)
     CONFIG_GLOBAL_PROPERTY(bool, vimKeybinds, false)
     CONFIG_GLOBAL_PROPERTY(QStringList, favouriteApps, {})
@@ -59,6 +60,12 @@ class LauncherConfig : public settings::ObjectNode {
                 { u"icon"_s, u"terminal"_s },
                 { u"description"_s, mark(u"Connect to a configured SSH host"_s) },
                 { u"command"_s, QStringList{ u"autocomplete"_s, u"ssh"_s } },
+            }),
+            vmap({
+                { u"name"_s, markCtx(u"GPU mode"_s, u"launcher action"_s) },
+                { u"icon"_s, u"developer_board"_s },
+                { u"description"_s, mark(u"Switch the graphics mode with Supergfxctl"_s) },
+                { u"command"_s, QStringList{ u"autocomplete"_s, u"gpu"_s } },
             }),
             vmap({
                 { u"name"_s, markCtx(u"OCR"_s, u"launcher action"_s) },

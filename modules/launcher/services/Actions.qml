@@ -22,7 +22,7 @@ Searcher {
     Variants {
         id: variants
 
-        model: GlobalConfig.launcher.actions.filter(a => (a.enabled ?? true) && (GlobalConfig.launcher.enableDangerousActions || !(a.dangerous ?? false)))
+        model: GlobalConfig.launcher.actions.filter(a => (a.enabled ?? true) && (GlobalConfig.launcher.enableDangerousActions || !(a.dangerous ?? false)) && (a.command?.[0] !== "autocomplete" || a.command?.[1] !== "gpu" || Config.launcher.enableSupergfxctl))
 
         Action {}
     }

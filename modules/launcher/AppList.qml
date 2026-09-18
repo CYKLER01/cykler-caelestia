@@ -33,6 +33,9 @@ StyledListView {
                 if (text.startsWith(`${prefix}${action} `))
                     return action;
 
+            if (text === `${prefix}gpu` || text.startsWith(`${prefix}gpu `))
+                return "gpu";
+
             if (text === `${prefix}ssh` || text.startsWith(`${prefix}ssh `))
                 return "ssh";
 
@@ -52,6 +55,8 @@ StyledListView {
             return Schemes.query(text);
         case "variant":
             return M3Variants.query(text);
+        case "gpu":
+            return Supergfxctl.modeData;
         case "ssh":
             return SSH.search(text);
         default:
@@ -62,6 +67,8 @@ StyledListView {
     model: ScriptModel {
         values: {
             SSH.hostRevision;
+            Supergfxctl.modeRevision;
+            Supergfxctl.modeData;
             return root.resultsForText(root.displayText);
         }
         onValuesChanged: root.currentIndex = 0
@@ -95,6 +102,8 @@ StyledListView {
     onStateChanged: {
         if (state === "scheme" || state === "variant")
             Schemes.reload();
+        else if (state === "gpu")
+            Supergfxctl.reload();
         else if (state === "ssh")
             SSH.reload();
     }
@@ -135,6 +144,13 @@ StyledListView {
 
             PropertyChanges {
                 root.delegate: variantItem
+            }
+        },
+        State {
+            name: "gpu"
+
+            PropertyChanges {
+                root.delegate: actionItem
             }
         },
         State {
