@@ -55,10 +55,10 @@ This is my take on the Caelestia shell — upstream's desktop shell with my own 
 
 -   **Clipboard by default** — a screenshot goes straight to the clipboard, so it can be
     pasted immediately without touching the temporary file it is written to first.
--   **Preview instead of a notification** — a thumbnail of the capture appears in the
-    bottom left of the screen for 3 seconds. Clicking it opens the capture in `swappy`
-    to annotate. If it is left alone, the temporary file is cleared and the clipboard
-    keeps the image.
+-   **Preview instead of a notification** — a framed thumbnail of the capture appears in
+    the bottom left of the screen for 3 seconds. Clicking the capture opens it in `swappy`
+    to annotate, and the save button writes a copy to `~/Desktop`. If it is left alone, the
+    temporary file is cleared and the clipboard keeps the image.
 
 ## Feature requests
 
