@@ -40,6 +40,14 @@ QtObject {
                 }
             }
         },
+        Component {
+            // NOTE(fork): Shell assets
+            StackPage {
+                Component {
+                    AssetsPage {}
+                }
+            }
+        },
 
         // Connectivity
         Component {

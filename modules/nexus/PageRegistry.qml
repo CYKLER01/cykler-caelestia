@@ -14,6 +14,13 @@ QtObject {
             description: Tr.tr("Wallpaper, fonts, colours"),
             category: "appearance"
         },
+        {
+            // NOTE(fork): shell assets page
+            label: Tr.tr("Shell assets"),
+            icon: "image",
+            description: Tr.tr("Logo, gifs, placeholder images"),
+            category: "appearance"
+        },
 
         // Connectivity
         // TODO

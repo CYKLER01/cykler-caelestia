@@ -60,6 +60,20 @@ This is my take on the Caelestia shell — upstream's desktop shell with my own 
     to annotate, and the save button writes a copy to `~/Desktop`. If it is left alone, the
     temporary file is cleared and the clipboard keeps the image.
 
+### Shell assets
+
+-   **Settings page** — a new "Shell assets" page under *Settings → Appearance* that
+    changes the images the shell ships with: the system logo, the session screen and
+    dashboard media gifs, and the sidebar and lock screen placeholder images. Previously
+    these could only be changed by editing the files (or the config) by hand.
+-   **Upload like the profile picture** — choosing a file copies it to
+    `~/.local/share/caelestia/assets/` and points the option at the copy, so the shell's
+    own assets (which can be read only, e.g. under `/etc/xdg`) are left alone. Each row
+    previews the current image, and the reset button restores the shell's default.
+-   **Shell-relative asset paths fixed** — the shipped defaults use the `root:` prefix
+    (e.g. `root:/assets/kurukuru.gif`), which stopped being resolved to the shell's asset
+    directory, leaving the default logo, gifs and placeholder images blank.
+
 ## Feature requests
 
 Any feature requests are welcome — open an [issue](https://github.com/CYKLER01/cykler-caelestia/issues)
