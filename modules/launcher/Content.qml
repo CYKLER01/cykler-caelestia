@@ -87,6 +87,24 @@ Item {
         Keys.onEscapePressed: root.screenState.launcher = false
 
         Keys.onPressed: event => {
+            // NOTE(fork): the wallpaper list is laid out horizontally, so plain left/right
+            // browse it alongside up/down and the scroll wheel. This is handled through
+            // onPressed rather than onLeftPressed/onRightPressed because the per-key
+            // handlers always accept the event, which would swallow the caret movement the
+            // search field needs whenever the app list is showing instead. Modified arrows
+            // are left alone so shift selection and word-wise movement keep working.
+            const arrowModifiers = Qt.ShiftModifier | Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier;
+            const plainArrow = (event.key === Qt.Key_Left || event.key === Qt.Key_Right) && !(event.modifiers & arrowModifiers);
+
+            if (list.showWallpapers && plainArrow) {
+                if (event.key === Qt.Key_Left)
+                    list.currentList?.decrementCurrentIndex();
+                else
+                    list.currentList?.incrementCurrentIndex();
+                event.accepted = true;
+                return;
+            }
+
             if (!GlobalConfig.launcher.vimKeybinds)
                 return;
 

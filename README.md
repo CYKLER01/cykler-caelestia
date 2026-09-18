@@ -44,6 +44,13 @@ This is my take on the Caelestia shell — upstream's desktop shell with my own 
 -   Launch either tool from the command panel by selecting its action or searching for
     `>ocr` / `>lens`.
 
+### Launcher wallpaper switching
+
+-   **Left/right arrow keys** — the `>wallpaper` list is laid out horizontally, so plain
+    left/right arrows now step through wallpapers, matching the existing up/down arrows and
+    scroll wheel. Modified arrows (`shift` / `ctrl` / `alt`) keep their usual caret and
+    selection behaviour in the search field.
+
 ## Feature requests
 
 Any feature requests are welcome — open an [issue](https://github.com/CYKLER01/cykler-caelestia/issues)
