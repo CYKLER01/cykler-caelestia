@@ -35,7 +35,7 @@ REPO_PKGS=(
 # --- Packages that only exist in the AUR ---
 AUR_PKGS=(
     caelestia-cli
-    quickshell-git
+    aur/quickshell-git
     qt6-m3shapes-git
     libcava
     ttf-material-symbols-variable
