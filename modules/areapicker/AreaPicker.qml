@@ -13,7 +13,24 @@ Scope {
 
         property bool freeze
         property bool closing
-        property bool clipboardOnly
+
+        // NOTE(fork): every capture mode behaves the same way now - the capture is
+        // copied to the clipboard and handed to the preview, which offers the editor
+        // and clears the temporary file when it is not used. The extra entry points
+        // below are kept so that existing keybinds keep working.
+
+        function capture(path: string, screen: ShellScreen): void {
+            preview.capture(path, screen);
+        }
+
+        function openPicker(freeze: bool): void {
+            // Clear any preview still up so it can't end up inside the next capture.
+            preview.dismiss();
+
+            root.freeze = freeze;
+            root.closing = false;
+            root.activeAsync = true;
+        }
 
         Variants {
             model: Screens.screens
@@ -49,31 +66,19 @@ Scope {
 
     IpcHandler {
         function open(): void {
-            root.freeze = false;
-            root.closing = false;
-            root.clipboardOnly = false;
-            root.activeAsync = true;
+            root.openPicker(false);
         }
 
         function openFreeze(): void {
-            root.freeze = true;
-            root.closing = false;
-            root.clipboardOnly = false;
-            root.activeAsync = true;
+            root.openPicker(true);
         }
 
         function openClip(): void {
-            root.freeze = false;
-            root.closing = false;
-            root.clipboardOnly = true;
-            root.activeAsync = true;
+            root.openPicker(false);
         }
 
         function openFreezeClip(): void {
-            root.freeze = true;
-            root.closing = false;
-            root.clipboardOnly = true;
-            root.activeAsync = true;
+            root.openPicker(true);
         }
 
         target: "picker"
@@ -84,12 +89,7 @@ Scope {
         // qmllint enable unresolved-type
         name: "screenshot"
         description: "Open screenshot tool"
-        onPressed: {
-            root.freeze = false;
-            root.closing = false;
-            root.clipboardOnly = false;
-            root.activeAsync = true;
-        }
+        onPressed: root.openPicker(false)
     }
 
     // qmllint disable unresolved-type
@@ -97,12 +97,7 @@ Scope {
         // qmllint enable unresolved-type
         name: "screenshotFreeze"
         description: "Open screenshot tool (freeze mode)"
-        onPressed: {
-            root.freeze = true;
-            root.closing = false;
-            root.clipboardOnly = false;
-            root.activeAsync = true;
-        }
+        onPressed: root.openPicker(true)
     }
 
     // qmllint disable unresolved-type
@@ -110,12 +105,7 @@ Scope {
         // qmllint enable unresolved-type
         name: "screenshotClip"
         description: "Open screenshot tool (clipboard)"
-        onPressed: {
-            root.freeze = false;
-            root.closing = false;
-            root.clipboardOnly = true;
-            root.activeAsync = true;
-        }
+        onPressed: root.openPicker(false)
     }
 
     // qmllint disable unresolved-type
@@ -123,11 +113,10 @@ Scope {
         // qmllint enable unresolved-type
         name: "screenshotFreezeClip"
         description: "Open screenshot tool (freeze mode, clipboard)"
-        onPressed: {
-            root.freeze = true;
-            root.closing = false;
-            root.clipboardOnly = true;
-            root.activeAsync = true;
-        }
+        onPressed: root.openPicker(true)
+    }
+
+    ScreenshotPreview {
+        id: preview
     }
 }

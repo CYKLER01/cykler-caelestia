@@ -51,6 +51,15 @@ This is my take on the Caelestia shell — upstream's desktop shell with my own 
     scroll wheel. Modified arrows (`shift` / `ctrl` / `alt`) keep their usual caret and
     selection behaviour in the search field.
 
+### Screenshot preview
+
+-   **Clipboard by default** — a screenshot goes straight to the clipboard, so it can be
+    pasted immediately without touching the temporary file it is written to first.
+-   **Preview instead of a notification** — a thumbnail of the capture appears in the
+    bottom left of the screen for 3 seconds. Clicking it opens the capture in `swappy`
+    to annotate. If it is left alone, the temporary file is cleared and the clipboard
+    keeps the image.
+
 ## Feature requests
 
 Any feature requests are welcome — open an [issue](https://github.com/CYKLER01/cykler-caelestia/issues)
